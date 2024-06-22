@@ -1,7 +1,6 @@
 #include "mapa.hpp"
 #include <iostream>
 #include <random>
-#include <stack>
 
 mapa::mapa(){
     this->tablero = new matriz<Casilleros>(18,24, Casilleros::OCUPADO);
@@ -42,10 +41,21 @@ mapa::mapa(){
         
     size_t coordenada_inicio = dist(gen);
     size_t coordenada_final;
+    size_t coordenada_cliente;
+    size_t clientes = 0;
 
     do{ 
         coordenada_final = dist(gen);
     }while(coordenada_final == coordenada_inicio);
+
+    while(clientes != 4){
+        do{
+            coordenada_cliente = dist(gen);
+            this->cliente = casilleros_libres[coordenada_cliente];
+        }while(tablero->elemento(this->cliente.x(), this->cliente.y()) == Casilleros::CLIENTE);
+        tablero->elemento(this->cliente.x(), this->cliente.y()) = Casilleros::CLIENTE;
+        clientes++;
+    }
     
     this->inico = casilleros_libres[coordenada_inicio];
     this->final = casilleros_libres[coordenada_final];
@@ -55,8 +65,11 @@ mapa::mapa(){
     
 }
 bool mapa::es_vecino_valido(coordenada posicion) {
-    // TODO: Implementar.
-    return true;
+    if(tablero->elemento(posicion.x(), posicion.y()) == Casilleros::LIBRE){
+        return true;
+    }else {
+        return false;
+    }
 }
 void mapa::imprimirTablero() const {
     for (size_t i = 0; i < tablero->filas(); ++i) {
@@ -67,6 +80,8 @@ void mapa::imprimirTablero() const {
                 std::cout << "I "; 
             } else if(tablero->elemento(i,j) == Casilleros::FINAL){
                 std::cout << "F ";
+            } else if(tablero->elemento(i,j) == Casilleros::CLIENTE){
+                std::cout << "C ";
             } else {
                 std::cout << "O "; // O representa un casillero ocupado
             }
