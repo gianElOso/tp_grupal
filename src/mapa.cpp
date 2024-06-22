@@ -5,8 +5,9 @@
 mapa::mapa(){
     this->tablero = new matriz<Casilleros>(18,24, Casilleros::OCUPADO);
     
-    coordenada casilleros_libres[] = {
-        {0,4},{0,5},{0,6},{0,7},{0,8},{0,9},{0,10},{0,11},{0,12},{0,13},{0,14},{0,15},
+    this->cantidad_clientes = 0;
+
+    this->casilleros_libres = {{0,4},{0,5},{0,6},{0,7},{0,8},{0,9},{0,10},{0,11},{0,12},{0,13},{0,14},{0,15},
         {1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10},{1,11},{1,12},{1,13},{1,14},{1,15},
         {2,4},{2,5},{2,6},{2,14},{2,15},
         {3,4},{3,5},{3,14},{3,15},
@@ -24,52 +25,65 @@ mapa::mapa(){
         {15,4},{15,5},
         {16,3},{16,4},{16,5},
         {17,3},{17,4},{17,5}
-    };
+        };
     
-    for (auto& coord : casilleros_libres) {
-        int x = coord.x();
-        int y = coord.y();
+    for (auto& posicion : casilleros_libres) {
+        int x = posicion.x();
+        int y = posicion.y();
         this->tablero->elemento(x, y) = Casilleros::LIBRE;
-    }
+    } 
+    asignar_clientes();
+}
+void mapa::asignar_clientes() {
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    size_t tamanio_coordenadas = sizeof(casilleros_libres) / sizeof(casilleros_libres[0]);
+    size_t tamanio_coordenadas = casilleros_libres.size();
 
     std::uniform_int_distribution<size_t> dist(0,tamanio_coordenadas - 1);
-        
-    size_t coordenada_inicio = dist(gen);
-    size_t coordenada_final;
+    std::uniform_int_distribution<size_t> dist_cliente(0,4);
+
+    size_t cantidad_clientes_total = dist_cliente(gen);
     size_t coordenada_cliente;
-    size_t clientes = 0;
-
-    do{ 
-        coordenada_final = dist(gen);
-    }while(coordenada_final == coordenada_inicio);
-
-    while(clientes != 4){
+    
+    while(cantidad_clientes != cantidad_clientes_total){
         do{
             coordenada_cliente = dist(gen);
             this->cliente = casilleros_libres[coordenada_cliente];
         }while(tablero->elemento(this->cliente.x(), this->cliente.y()) == Casilleros::CLIENTE);
         tablero->elemento(this->cliente.x(), this->cliente.y()) = Casilleros::CLIENTE;
-        clientes++;
+        cantidad_clientes++;
     }
-    
-    this->inico = casilleros_libres[coordenada_inicio];
-    this->final = casilleros_libres[coordenada_final];
+}
+coordenada mapa::get_coordenada_libre(){
+    std::random_device rd;
+    std::mt19937 gen(rd());
 
-    tablero->elemento(this->inico.x(), this->inico.y()) = Casilleros::INICIO;
-    tablero->elemento(this->final.x(), this->final.y()) = Casilleros::FINAL;
-    
+    size_t tamanio_coordenadas = casilleros_libres.size();
+
+    std::uniform_int_distribution<size_t> dist(0,tamanio_coordenadas - 1);
+
+    size_t libre;
+    coordenada coordenada_libre;
+
+    do{
+        libre = dist(gen);
+        coordenada_libre = casilleros_libres[libre];
+    }while(this->tablero->elemento(coordenada_libre.x(), coordenada_libre.y()) != Casilleros::LIBRE);
+
+    return coordenada_libre;
+}
+void mapa::set_final(coordenada _final) {   
+    this->final = _final;
+    tablero->elemento(final.x(), final.y()) = Casilleros::FINAL; 
+}
+void mapa::set_inicio(coordenada _inicio) {
+    this->inicio = _inicio;
+    tablero->elemento(inicio.x(), inicio.y()) = Casilleros::INICIO;
 }
 bool mapa::es_vecino_valido(coordenada posicion) {
-    if(tablero->elemento(posicion.x(), posicion.y()) == Casilleros::LIBRE){
-        return true;
-    }else {
-        return false;
-    }
+    return (tablero->elemento(posicion.x(), posicion.y()) == Casilleros::LIBRE);
 }
 void mapa::imprimirTablero() const {
     for (size_t i = 0; i < tablero->filas(); ++i) {
@@ -88,4 +102,7 @@ void mapa::imprimirTablero() const {
         }
         std::cout << '\n';
     }
+}
+mapa::~mapa(){
+    delete tablero;
 }
